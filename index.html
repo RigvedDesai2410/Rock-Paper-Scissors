@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Super Rock Paper Scissors - Retro 16-Bit Edition</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✊</text></svg>">
+</head>
+
+<body>
+  <!-- Retro CRT Scanline Overlay -->
+  <div class="crt-overlay"></div>
+
+  <div class="game-container">
+    <!-- Header HUD -->
+    <header class="arcade-header">
+      <div class="title-badge">
+        <span class="pixel-coin"></span>
+        <h1>Rock-Paper-Scissors</h1>
+      </div>
+
+      <!-- Scoreboard: Strictly tracks ONLY Player Wins, Draws, and Streaks -->
+      <div class="hud-scores">
+        <div class="score-box player-wins">
+          <span class="score-label">🏆 WINS</span>
+          <span class="score-val" id="val-player-wins">0</span>
+        </div>
+        <div class="score-box draws">
+          <span class="score-label">🤝 DRAWS</span>
+          <span class="score-val" id="val-draws">0</span>
+        </div>
+        <div class="score-box streak">
+          <span class="score-label">🔥 STREAK</span>
+          <span class="score-val" id="val-streak">0</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-mute" title="Toggle Sound (M)">🔊 SOUND ON</button>
+        <button class="icon-btn" id="btn-reset" title="Reset Scores">🔄 RESET</button>
+        <button class="icon-btn" id="btn-help" title="Rules & Shortcuts">❓ RULES</button>
+      </div>
+    </header>
+
+    <!-- 3D Perspective Battle Arena -->
+    <main class="battle-arena" id="battle-arena">
+      <!-- 3D Grid Floor & Battle Ring -->
+      <div class="arena-floor"></div>
+      <div class="arena-ring"></div>
+
+      <!-- Round Announcer & Callouts -->
+      <div class="announcer-container">
+        <div class="countdown-callout" id="countdown-callout"></div>
+        <div class="result-banner" id="result-banner">
+          <div class="result-main" id="result-main">READY!</div>
+          <div class="result-sub" id="result-sub">Pick your move below</div>
+        </div>
+      </div>
+
+      <!-- Center Clash Zone — visual effects removed -->
+      <div class="clash-zone">
+        <div class="shockwave" id="shockwave" style="display:none"></div>
+        <svg class="impact-burst" id="impact-burst" viewBox="0 0 100 100" style="display:none">
+          <polygon points="50,5 62,35 95,25 75,50 98,72 65,75 50,98 35,75 5,78 25,50 2,28 35,35" fill="#ffcc00"
+            stroke="#ff3366" stroke-width="4" />
+          <polygon points="50,18 58,40 82,32 68,50 84,65 60,68 50,85 40,68 18,70 32,50 16,35 40,40" fill="#ffffff" />
+          <circle cx="50" cy="50" r="12" fill="#ff3366" />
+        </svg>
+      </div>
+
+      <!-- COMPUTER'S HAND (Anchored at Top, reaching down towards table) -->
+      <div class="hand-rig hand-computer idle" id="computer-hand-rig">
+        <div class="hand-visual" id="computer-hand-visual">
+          <!-- Rendered dynamically by sprites.js -->
+        </div>
+      </div>
+
+      <!-- PLAYER'S HAND (Anchored at Bottom-Right, reaching forward into 3D arena) -->
+      <div class="hand-rig hand-player idle" id="player-hand-rig">
+        <div class="hand-visual" id="player-hand-visual">
+          <!-- Rendered dynamically by sprites.js -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Player Control Dock -->
+    <footer class="player-controls-dock">
+      <div class="controls-instruction">CHOOSE YOUR MOVE:</div>
+      <div class="move-buttons-group">
+        <button class="move-btn" id="btn-rock" data-move="rock" onclick="handleMoveSelect('rock')">
+          <span class="emoji-icon">✊</span>
+          <span class="btn-label">ROCK</span>
+          <span class="btn-key">[1]</span>
+        </button>
+
+        <button class="move-btn" id="btn-paper" data-move="paper" onclick="handleMoveSelect('paper')">
+          <span class="emoji-icon">🖐️</span>
+          <span class="btn-label">PAPER</span>
+          <span class="btn-key">[2]</span>
+        </button>
+
+        <button class="move-btn" id="btn-scissors" data-move="scissors" onclick="handleMoveSelect('scissors')">
+          <span class="emoji-icon">✌️</span>
+          <span class="btn-label">SCISSORS</span>
+          <span class="btn-key">[3]</span>
+        </button>
+      </div>
+
+      <!-- Recent Rounds Feed -->
+      <div class="round-log-strip" id="round-log-strip">
+        <span class="log-tag">Press [1], [2], [3] or click an emoji to play</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Help & Rules Modal -->
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal-card">
+      <h2>SUPER ROCK PAPER SCISSORS</h2>
+      <p>A retro 16-bit arcade simulation of the classic Rock-Paper-Scissors game featuring authentic Mario-style
+        pixelated human hands and perspective depth animation!</p>
+
+      <p><strong>HOW TO PLAY:</strong></p>
+      <ul>
+        <li>Select <strong>✊ ROCK</strong>, <strong>🖐️ PAPER</strong>, or <strong>✌️ SCISSORS</strong> using the
+          buttons or keyboard.</li>
+        <li>Watch the authentic 3-beat rhythm shake: <em>"Rock! Paper! Scissors! SHOOT!"</em></li>
+        <li>Hands thrust forward in 3D perspective into the center clash zone!</li>
+      </ul>
+
+      <p><strong>RULES:</strong></p>
+      <ul>
+        <li>✊ Rock crushes ✌️ Scissors</li>
+        <li>🖐️ Paper covers ✊ Rock</li>
+        <li>✌️ Scissors cut 🖐️ Paper</li>
+      </ul>
+
+      <p><strong>KEYBOARD SHORTCUTS:</strong></p>
+      <ul>
+        <li><code>1</code> or <code>R</code>: Throw Rock</li>
+        <li><code>2</code> or <code>P</code>: Throw Paper</li>
+        <li><code>3</code> or <code>S</code>: Throw Scissors</li>
+        <li><code>M</code>: Toggle Mute / Sound</li>
+      </ul>
+
+      <p><strong>SCORING SYSTEM:</strong></p>
+      <p>Only your <strong>Wins</strong>, <strong>Draws</strong>, and <strong>Streaks</strong> are recorded. Regroup and
+        conquer your high score!</p>
+
+      <button class="modal-close-btn" id="modal-close">LET'S PLAY!</button>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/sprites.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+</body>
+
+</html>

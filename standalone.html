@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Super Rock Paper Scissors - Retro 16-Bit Edition</title>
+  <style>
+/* ==========================================================================
+   RETRO PIXEL ARCADE - ROCK PAPER SCISSORS
+   Complete 3D Perspective Hand Motion & Retro Fighter Aesthetic
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap');
+
+:root {
+  --bg-dark: #0c0814;
+  --bg-gradient: radial-gradient(circle at 50% 30%, #1e1338 0%, #0c0814 85%);
+  --stage-border: #f5b041;
+  --neon-gold: #ffcc00;
+  --neon-cyan: #00f5d4;
+  --neon-red: #ff3366;
+  --neon-purple: #9d4edd;
+  --panel-bg: rgba(18, 12, 35, 0.88);
+  --panel-border: #432b70;
+  --pixel-shadow: 4px 4px 0px rgba(0, 0, 0, 0.7);
+  --pixel-shadow-sm: 2px 2px 0px rgba(0, 0, 0, 0.7);
+  --text-main: #f0e6ff;
+  --text-dim: #9b8ab8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-dark);
+  font-family: 'Press Start 2P', 'Silkscreen', monospace, sans-serif;
+  color: var(--text-main);
+  image-rendering: pixelated;
+}
+
+/* Background Animated Grid */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-gradient);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header & HUD */
+.arcade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: var(--panel-bg);
+  border-bottom: 4px solid var(--panel-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  z-index: 100;
+}
+
+.title-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-badge h1 {
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--neon-gold);
+  text-shadow: 2px 2px 0px #b37715, 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+.pixel-coin {
+  width: 12px;
+  height: 12px;
+  background: var(--neon-gold);
+  display: inline-block;
+  box-shadow: var(--pixel-shadow-sm);
+  animation: pulse-coin 1s infinite alternate;
+}
+
+@keyframes pulse-coin {
+  from { transform: scale(1); filter: brightness(1); }
+  to { transform: scale(1.15); filter: brightness(1.3); }
+}
+
+/* Scoreboard (ONLY Player Wins, Draws, and Streaks - NO computer wins) */
+.hud-scores {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: #100b22;
+  border: 2px solid var(--panel-border);
+  box-shadow: var(--pixel-shadow-sm);
+}
+
+.score-box.player-wins {
+  border-color: #f5b041;
+  background: #231804;
+}
+
+.score-box.player-wins .score-label {
+  color: #ffcc00;
+}
+
+.score-box.draws {
+  border-color: #3d5a80;
+}
+
+.score-box.draws .score-label {
+  color: #98c1d9;
+}
+
+.score-box.streak {
+  border-color: #ff3366;
+}
+
+.score-box.streak .score-label {
+  color: #ff6699;
+}
+
+.score-label {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+
+.score-val {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.score-val.bump {
+  transform: scale(1.4);
+  color: var(--neon-gold);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-btn {
+  background: #18112e;
+  border: 2px solid var(--panel-border);
+  color: var(--text-main);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  box-shadow: var(--pixel-shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: #2a1e4d;
+  border-color: var(--neon-gold);
+  transform: translateY(-2px);
+}
+
+.icon-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* 3D Battle Arena */
+.battle-arena {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  perspective: 1000px;
+  perspective-origin: 50% 60%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Retro Perspective Grid Flooring */
+.arena-floor {
+  position: absolute;
+  width: 160%;
+  height: 120%;
+  bottom: -20%;
+  left: -30%;
+  background-image: 
+    linear-gradient(to right, rgba(157, 78, 221, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(157, 78, 221, 0.15) 1px, transparent 1px);
+  background-size: 50px 50px;
+  transform: rotateX(65deg);
+  transform-origin: bottom center;
+  pointer-events: none;
+}
+
+/* Arena Ring Circle */
+.arena-ring {
+  position: absolute;
+  width: 320px;
+  height: 180px;
+  border: 4px dashed rgba(255, 204, 0, 0.3);
+  border-radius: 50%;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotateX(60deg);
+  pointer-events: none;
+  box-shadow: 0 0 35px rgba(255, 204, 0, 0.15);
+}
+
+/* CLASH ZONE & IMPACT BURST */
+.clash-zone {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.impact-burst {
+  width: 140px;
+  height: 140px;
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.2) rotate(0deg);
+  pointer-events: none;
+  transition: none;
+}
+
+.impact-burst.active {
+  animation: burst-pop 0.45s ease-out forwards;
+}
+
+@keyframes burst-pop {
+  0% {
+    opacity: 1;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3) rotate(25deg);
+    filter: drop-shadow(0 0 15px #ffcc00);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6) rotate(50deg);
+  }
+}
+
+/* Shockwave rings */
+.shockwave {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid var(--neon-gold);
+  opacity: 0;
+}
+
+.shockwave.active {
+  animation: shockwave-expand 0.5s ease-out forwards;
+}
+
+@keyframes shockwave-expand {
+  0% { width: 30px; height: 30px; opacity: 1; border-color: #fff; }
+  100% { width: 320px; height: 320px; opacity: 0; border-color: var(--neon-gold); }
+}
+
+/* -------------------------------------------------------------
+   HAND RIGS & HUMAN MOTION CHOREOGRAPHY
+   ------------------------------------------------------------- */
+
+/* Shared Hand Rig Styles */
+.hand-rig {
+  position: absolute;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.hand-visual {
+  width: 260px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  filter: drop-shadow(4px 8px 12px rgba(0,0,0,0.6));
+}
+
+.hand-visual svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* 1. PLAYER'S HAND (Anchored from Center, Offset to Bottom-Right) */
+.hand-player {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -120px;
+  margin-top: -150px;
+  transform-origin: center center;
+  z-index: 25;
+  transform: translate3d(120px, 170px, 40px) rotateZ(-15deg) scale(1.15);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Mirror visual sprite for Player so it is an anatomically correct RIGHT hand */
+.hand-player .hand-visual {
+  transform: scaleX(-1);
+}
+
+/* Player Idle Breathing / Sway */
+.hand-player.idle {
+  animation: player-breathe 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes player-breathe {
+  0% {
+    transform: translate3d(120px, 170px, 40px) rotateZ(-15deg) scale(1.15);
+  }
+  100% {
+    transform: translate3d(115px, 162px, 35px) rotateZ(-14deg) scale(1.13);
+  }
+}
+
+/* 2. COMPUTER'S HAND (Anchored from Center, Fully On-Screen at Top-Left) */
+.hand-computer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -120px;
+  margin-top: -150px;
+  transform-origin: center center;
+  z-index: 20;
+  transform: translate3d(-120px, -170px, 0px) rotateZ(165deg) scale(1.0);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hand-computer.idle {
+  animation: computer-breathe 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes computer-breathe {
+  0% {
+    transform: translate3d(-120px, -170px, 0px) rotateZ(165deg) scale(1.0);
+  }
+  100% {
+    transform: translate3d(-115px, -162px, 0px) rotateZ(166deg) scale(1.02);
+  }
+}
+
+/* -------------------------------------------------------------
+   THE REALISTIC HUMAN HAND SHAKE & THROW ANIMATIONS
+   Organic Diagonal Human Arcs — Starting at Angles, Meeting in Dead Center!
+   Rhythm: 1 (Rock) -> 2 (Paper) -> 3 (Scissors) -> SHOOT!
+   ------------------------------------------------------------- */
+
+/* PLAYER HAND: Natural Right-Arm Arc from Bottom-Right into Dead Center */
+.hand-player.shake-1 {
+  animation: player-pump-1 0.45s ease-in-out forwards;
+}
+
+.hand-player.shake-2 {
+  animation: player-pump-2 0.45s ease-in-out forwards;
+}
+
+.hand-player.shake-3 {
+  animation: player-pump-3 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.hand-player.shoot {
+  animation: player-shoot-throw 0.6s cubic-bezier(0.15, 0.85, 0.35, 1.2) forwards;
+}
+
+@keyframes player-pump-1 {
+  0% {
+    transform: translate3d(120px, 170px, 40px) rotateZ(-15deg) scale(1.15);
+  }
+  35% {
+    /* Pull back down-right towards ribs */
+    transform: translate3d(150px, 210px, 70px) rotateZ(-20deg) scale(1.22);
+  }
+  80% {
+    /* Arc forward-left curving naturally towards center */
+    transform: translate3d(60px, 100px, 20px) rotateZ(-9deg) scale(1.08);
+  }
+  100% {
+    /* Settle */
+    transform: translate3d(100px, 150px, 35px) rotateZ(-13deg) scale(1.12);
+  }
+}
+
+@keyframes player-pump-2 {
+  0% {
+    transform: translate3d(100px, 150px, 35px) rotateZ(-13deg) scale(1.12);
+  }
+  35% {
+    /* Recoil down-right */
+    transform: translate3d(160px, 220px, 80px) rotateZ(-22deg) scale(1.25);
+  }
+  80% {
+    /* Higher arc forward-left */
+    transform: translate3d(40px, 80px, 10px) rotateZ(-7deg) scale(1.05);
+  }
+  100% {
+    /* Settle */
+    transform: translate3d(90px, 140px, 30px) rotateZ(-12deg) scale(1.1);
+  }
+}
+
+@keyframes player-pump-3 {
+  0% {
+    transform: translate3d(90px, 140px, 30px) rotateZ(-12deg) scale(1.1);
+  }
+  45% {
+    /* Deepest windup pull back down-right */
+    transform: translate3d(175px, 240px, 95px) rotateZ(-26deg) scale(1.3);
+  }
+  100% {
+    /* Poised at tension ready to strike */
+    transform: translate3d(160px, 225px, 85px) rotateZ(-24deg) scale(1.26);
+  }
+}
+
+@keyframes player-shoot-throw {
+  0% {
+    transform: translate3d(160px, 225px, 85px) rotateZ(-24deg) scale(1.26);
+  }
+  60% {
+    /* Smooth arc to peak — the same forward position as pump-1's forward beat */
+    transform: translate3d(50px, 90px, 15px) rotateZ(-8deg) scale(1.09);
+  }
+  100% {
+    /* Hold at max forward reach — no crash into center */
+    transform: translate3d(60px, 95px, 10px) rotateZ(-8deg) scale(1.09);
+  }
+}
+
+/* COMPUTER HAND: Natural Opponent Arc from Top-Left into Dead Center */
+.hand-computer.shake-1 {
+  animation: comp-pump-1 0.45s ease-in-out forwards;
+}
+
+.hand-computer.shake-2 {
+  animation: comp-pump-2 0.45s ease-in-out forwards;
+}
+
+.hand-computer.shake-3 {
+  animation: comp-pump-3 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.hand-computer.shoot {
+  animation: comp-shoot-throw 0.6s cubic-bezier(0.15, 0.85, 0.35, 1.2) forwards;
+}
+
+@keyframes comp-pump-1 {
+  0% {
+    transform: translate3d(-120px, -170px, 0px) rotateZ(165deg) scale(1.0);
+  }
+  35% {
+    /* Pull back up-left */
+    transform: translate3d(-150px, -210px, -30px) rotateZ(160deg) scale(0.92);
+  }
+  80% {
+    /* Arc forward-right curving towards center */
+    transform: translate3d(-60px, -100px, 10px) rotateZ(171deg) scale(1.02);
+  }
+  100% {
+    /* Settle */
+    transform: translate3d(-100px, -150px, 0px) rotateZ(167deg) scale(0.97);
+  }
+}
+
+@keyframes comp-pump-2 {
+  0% {
+    transform: translate3d(-100px, -150px, 0px) rotateZ(167deg) scale(0.97);
+  }
+  35% {
+    /* Recoil up-left */
+    transform: translate3d(-160px, -220px, -40px) rotateZ(158deg) scale(0.9);
+  }
+  80% {
+    /* Lower arc forward-right */
+    transform: translate3d(-40px, -80px, 15px) rotateZ(173deg) scale(1.04);
+  }
+  100% {
+    /* Settle */
+    transform: translate3d(-90px, -140px, 0px) rotateZ(168deg) scale(0.98);
+  }
+}
+
+@keyframes comp-pump-3 {
+  0% {
+    transform: translate3d(-90px, -140px, 0px) rotateZ(168deg) scale(0.98);
+  }
+  45% {
+    /* Deepest windup pull back up-left */
+    transform: translate3d(-175px, -240px, -50px) rotateZ(154deg) scale(0.86);
+  }
+  100% {
+    /* Poised at tension ready to strike */
+    transform: translate3d(-160px, -225px, -40px) rotateZ(156deg) scale(0.89);
+  }
+}
+
+@keyframes comp-shoot-throw {
+  0% {
+    transform: translate3d(-160px, -225px, -40px) rotateZ(156deg) scale(0.89);
+  }
+  60% {
+    /* Smooth arc to peak — the same forward position as comp-pump-1's forward beat */
+    transform: translate3d(-50px, -90px, 10px) rotateZ(172deg) scale(1.03);
+  }
+  100% {
+    /* Hold at max forward reach — no crash into center */
+    transform: translate3d(-60px, -95px, 5px) rotateZ(172deg) scale(1.03);
+  }
+}
+
+/* Winner / Victory Hand Glow */
+.hand-winner {
+  filter: drop-shadow(0 0 25px rgba(255, 204, 0, 0.95)) drop-shadow(0 0 50px rgba(255, 204, 0, 0.5)) !important;
+}
+
+/* -------------------------------------------------------------
+   ROUND ANNOUNCER & BANNER
+   ------------------------------------------------------------- */
+.announcer-container {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.countdown-callout {
+  font-size: 26px;
+  color: #fff;
+  letter-spacing: 3px;
+  text-shadow: 3px 3px 0 #000, 0 0 15px rgba(255, 204, 0, 0.8);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.countdown-callout.show {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.countdown-callout.pop-1 { color: #00f5d4; }
+.countdown-callout.pop-2 { color: #f5b041; }
+.countdown-callout.pop-3 { color: #ff3366; }
+.countdown-callout.pop-shoot { 
+  font-size: 34px; 
+  color: #ffcc00; 
+  animation: shoot-flash 0.3s alternate infinite;
+}
+
+@keyframes shoot-flash {
+  from { filter: drop-shadow(0 0 8px #ffcc00); }
+  to { filter: drop-shadow(0 0 25px #ff3366); }
+}
+
+.result-banner {
+  margin-top: 10px;
+  padding: 10px 22px;
+  background: var(--panel-bg);
+  border: 3px solid var(--neon-gold);
+  box-shadow: 0 0 20px rgba(0,0,0,0.8), var(--pixel-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(-20px) scale(0.9);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.result-banner.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.result-main {
+  font-size: 16px;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+.result-sub {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.result-banner.win {
+  border-color: #00f5d4;
+  box-shadow: 0 0 25px rgba(0, 245, 212, 0.4), var(--pixel-shadow);
+}
+.result-banner.win .result-main {
+  color: #00f5d4;
+  text-shadow: 2px 2px 0 #004d40;
+}
+
+.result-banner.draw {
+  border-color: #ffcc00;
+  box-shadow: 0 0 25px rgba(255, 204, 0, 0.4), var(--pixel-shadow);
+}
+.result-banner.draw .result-main {
+  color: #ffcc00;
+  text-shadow: 2px 2px 0 #806600;
+}
+
+.result-banner.try-again {
+  border-color: #ff3366;
+  box-shadow: 0 0 25px rgba(255, 51, 102, 0.3), var(--pixel-shadow);
+}
+.result-banner.try-again .result-main {
+  color: #ff6699;
+}
+
+/* -------------------------------------------------------------
+   PLAYER CONTROLS & EMOJI MOVE PICKER
+   ------------------------------------------------------------- */
+.player-controls-dock {
+  background: var(--panel-bg);
+  border-top: 4px solid var(--panel-border);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 -4px 25px rgba(0,0,0,0.7);
+  z-index: 100;
+}
+
+.controls-instruction {
+  font-size: 9px;
+  color: var(--neon-gold);
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.move-buttons-group {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.move-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  background: linear-gradient(180deg, #2b1b4d 0%, #150d27 100%);
+  border: 3px solid #633ea8;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 6px 0 #0d0718, 0 10px 15px rgba(0,0,0,0.5);
+  transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.move-btn .emoji-icon {
+  font-size: 32px;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.move-btn .btn-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #ffcc00;
+}
+
+.move-btn .btn-key {
+  font-size: 7px;
+  color: var(--text-dim);
+  background: rgba(0,0,0,0.4);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.move-btn:hover:not(:disabled) {
+  border-color: var(--neon-gold);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 0 #0d0718, 0 14px 20px rgba(255, 204, 0, 0.3);
+}
+
+.move-btn:hover:not(:disabled) .emoji-icon {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.move-btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #0d0718, 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.move-btn.selected {
+  border-color: var(--neon-cyan);
+  background: linear-gradient(180deg, #184852 0%, #0d282e 100%);
+  box-shadow: 0 0 20px rgba(0, 245, 212, 0.6), 0 4px 0 #071518;
+}
+
+.move-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(40%);
+}
+
+/* History / Round Log Bar */
+.round-log-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 8px;
+  color: var(--text-dim);
+  max-width: 500px;
+  overflow-x: auto;
+  padding: 2px 8px;
+}
+
+.log-tag {
+  padding: 3px 6px;
+  border-radius: 2px;
+  background: #18112e;
+  border: 1px solid var(--panel-border);
+  white-space: nowrap;
+}
+
+.log-tag.win {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
+.log-tag.draw {
+  border-color: var(--neon-gold);
+  color: var(--neon-gold);
+}
+
+.log-tag.try-again {
+  border-color: #665287;
+  color: #a491c4;
+}
+
+/* Modal Dialog */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal-overlay.active {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--panel-bg);
+  border: 4px solid var(--neon-gold);
+  box-shadow: 0 0 35px rgba(255, 204, 0, 0.3), var(--pixel-shadow);
+  max-width: 520px;
+  width: 90%;
+  padding: 24px;
+  position: relative;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-card h2 {
+  font-size: 14px;
+  color: var(--neon-gold);
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.modal-card p, .modal-card li {
+  font-size: 9px;
+  line-height: 1.8;
+  color: #ddd;
+  margin-bottom: 12px;
+}
+
+.modal-card ul {
+  padding-left: 18px;
+}
+
+.modal-close-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 10px;
+  background: var(--neon-gold);
+  color: #0c0814;
+  border: none;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-close-btn:hover {
+  background: #ffe066;
+}
+
+/* Screen Shake — disabled per user preference */
+.shake-screen {
+  /* animation: screen-rumble 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; */
+}
+
+@keyframes screen-rumble {
+  10%, 90% { transform: translate3d(-3px, 2px, 0); }
+  20%, 80% { transform: translate3d(4px, -3px, 0); }
+  30%, 50%, 70% { transform: translate3d(-5px, 4px, 0); }
+  40%, 60% { transform: translate3d(5px, -2px, 0); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .arcade-header {
+    padding: 10px 14px;
+  }
+  .title-badge h1 {
+    font-size: 10px;
+  }
+  .score-box {
+    padding: 4px 8px;
+  }
+  .score-label {
+    font-size: 7px;
+  }
+  .score-val {
+    font-size: 11px;
+  }
+  .hand-visual {
+    width: 190px;
+    height: 240px;
+  }
+  .move-btn {
+    padding: 10px 6px;
+  }
+  .move-btn .emoji-icon {
+    font-size: 24px;
+  }
+  .move-btn .btn-label {
+    font-size: 8px;
+  }
+  .move-buttons-group {
+    gap: 10px;
+  }
+  .countdown-callout {
+    font-size: 18px;
+  }
+  .countdown-callout.pop-shoot {
+    font-size: 24px;
+  }
+}
+
+</style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✊</text></svg>">
+</head>
+<body>
+  <!-- Retro CRT Scanline Overlay -->
+  <div class="crt-overlay"></div>
+
+  <div class="game-container">
+    <!-- Header HUD -->
+    <header class="arcade-header">
+      <div class="title-badge">
+        <span class="pixel-coin"></span>
+        <h1>SUPER RO-SHAM-BO</h1>
+      </div>
+
+      <!-- Scoreboard: Strictly tracks ONLY Player Wins, Draws, and Streaks -->
+      <div class="hud-scores">
+        <div class="score-box player-wins">
+          <span class="score-label">🏆 WINS</span>
+          <span class="score-val" id="val-player-wins">0</span>
+        </div>
+        <div class="score-box draws">
+          <span class="score-label">🤝 DRAWS</span>
+          <span class="score-val" id="val-draws">0</span>
+        </div>
+        <div class="score-box streak">
+          <span class="score-label">🔥 STREAK</span>
+          <span class="score-val" id="val-streak">0</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-mute" title="Toggle Sound (M)">🔊 SOUND ON</button>
+        <button class="icon-btn" id="btn-reset" title="Reset Scores">🔄 RESET</button>
+        <button class="icon-btn" id="btn-help" title="Rules & Shortcuts">❓ RULES</button>
+      </div>
+    </header>
+
+    <!-- 3D Perspective Battle Arena -->
+    <main class="battle-arena" id="battle-arena">
+      <!-- 3D Grid Floor & Battle Ring -->
+      <div class="arena-floor"></div>
+      <div class="arena-ring"></div>
+
+      <!-- Round Announcer & Callouts -->
+      <div class="announcer-container">
+        <div class="countdown-callout" id="countdown-callout"></div>
+        <div class="result-banner" id="result-banner">
+          <div class="result-main" id="result-main">READY!</div>
+          <div class="result-sub" id="result-sub">Pick your move below</div>
+        </div>
+      </div>
+
+      <!-- Center Clash Zone — visual effects removed -->
+      <div class="clash-zone">
+        <div class="shockwave" id="shockwave" style="display:none"></div>
+        <svg class="impact-burst" id="impact-burst" viewBox="0 0 100 100" style="display:none">
+          <polygon points="50,5 62,35 95,25 75,50 98,72 65,75 50,98 35,75 5,78 25,50 2,28 35,35"
+                   fill="#ffcc00" stroke="#ff3366" stroke-width="4" />
+          <polygon points="50,18 58,40 82,32 68,50 84,65 60,68 50,85 40,68 18,70 32,50 16,35 40,40"
+                   fill="#ffffff" />
+          <circle cx="50" cy="50" r="12" fill="#ff3366" />
+        </svg>
+      </div>
+
+      <!-- COMPUTER'S HAND (Anchored at Top, reaching down towards table) -->
+      <div class="hand-rig hand-computer idle" id="computer-hand-rig">
+        <div class="hand-visual" id="computer-hand-visual">
+          <!-- Rendered dynamically by sprites.js -->
+        </div>
+      </div>
+
+      <!-- PLAYER'S HAND (Anchored at Bottom-Right, reaching forward into 3D arena) -->
+      <div class="hand-rig hand-player idle" id="player-hand-rig">
+        <div class="hand-visual" id="player-hand-visual">
+          <!-- Rendered dynamically by sprites.js -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Player Control Dock -->
+    <footer class="player-controls-dock">
+      <div class="controls-instruction">CHOOSE YOUR MOVE:</div>
+      <div class="move-buttons-group">
+        <button class="move-btn" id="btn-rock" data-move="rock" onclick="handleMoveSelect('rock')">
+          <span class="emoji-icon">✊</span>
+          <span class="btn-label">ROCK</span>
+          <span class="btn-key">[1]</span>
+        </button>
+
+        <button class="move-btn" id="btn-paper" data-move="paper" onclick="handleMoveSelect('paper')">
+          <span class="emoji-icon">🖐️</span>
+          <span class="btn-label">PAPER</span>
+          <span class="btn-key">[2]</span>
+        </button>
+
+        <button class="move-btn" id="btn-scissors" data-move="scissors" onclick="handleMoveSelect('scissors')">
+          <span class="emoji-icon">✌️</span>
+          <span class="btn-label">SCISSORS</span>
+          <span class="btn-key">[3]</span>
+        </button>
+      </div>
+
+      <!-- Recent Rounds Feed -->
+      <div class="round-log-strip" id="round-log-strip">
+        <span class="log-tag">Press [1], [2], [3] or click an emoji to play</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Help & Rules Modal -->
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal-card">
+      <h2>SUPER ROCK PAPER SCISSORS</h2>
+      <p>A retro 16-bit arcade simulation of the classic Rock-Paper-Scissors game featuring authentic Mario-style pixelated human hands and perspective depth animation!</p>
+      
+      <p><strong>HOW TO PLAY:</strong></p>
+      <ul>
+        <li>Select <strong>✊ ROCK</strong>, <strong>🖐️ PAPER</strong>, or <strong>✌️ SCISSORS</strong> using the buttons or keyboard.</li>
+        <li>Watch the authentic 3-beat rhythm shake: <em>"Rock! Paper! Scissors! SHOOT!"</em></li>
+        <li>Hands thrust forward in 3D perspective into the center clash zone!</li>
+      </ul>
+
+      <p><strong>RULES:</strong></p>
+      <ul>
+        <li>✊ Rock crushes ✌️ Scissors</li>
+        <li>🖐️ Paper covers ✊ Rock</li>
+        <li>✌️ Scissors cut 🖐️ Paper</li>
+      </ul>
+
+      <p><strong>KEYBOARD SHORTCUTS:</strong></p>
+      <ul>
+        <li><code>1</code> or <code>R</code>: Throw Rock</li>
+        <li><code>2</code> or <code>P</code>: Throw Paper</li>
+        <li><code>3</code> or <code>S</code>: Throw Scissors</li>
+        <li><code>M</code>: Toggle Mute / Sound</li>
+      </ul>
+
+      <p><strong>SCORING SYSTEM:</strong></p>
+      <p>Only your <strong>Wins</strong>, <strong>Draws</strong>, and <strong>Streaks</strong> are recorded. Regroup and conquer your high score!</p>
+
+      <button class="modal-close-btn" id="modal-close">LET'S PLAY!</button>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script>
+/**
+ * RETRO 16-BIT PIXEL ART SPRITES FOR ROCK PAPER SCISSORS
+ * Rendered using SVG pixel grids with shape-rendering="crispEdges"
+ * for razor-sharp retro Mario / Arcade aesthetic at any resolution.
+ */
+
+// Palette definitions:
+// Player: Warm human skin tones, vibrant red cuff with gold rim
+// Computer: Cyber/arcade cool tones, deep indigo cuff with neon cyan rim
+const PALETTES = {
+  player: {
+    bg: 'transparent',
+    outline: '#1e0f08',      // Deep dark contour
+    shadowDark: '#703417',   // Deep skin shadow / crease
+    shadowMid: '#a8572a',    // Midtone skin shadow
+    skinBase: '#dc8a4e',     // Base healthy skin
+    skinLight: '#f5b882',    // Knuckle / finger highlight
+    skinGlint: '#ffe6cb',    // Bright specular highlight
+    cuffMain: '#e62429',     // Mario Red sleeve
+    cuffShadow: '#991115',   // Sleeve dark fold
+    cuffTrim: '#fbb034',     // Gold wrist trim
+    cuffTrimShadow: '#b37715'
+  },
+  computer: {
+    bg: 'transparent',
+    outline: '#0d1527',
+    shadowDark: '#1e2c4f',
+    shadowMid: '#2d457c',
+    skinBase: '#4a6eb5',     // Cool retro cyber skin tone / synth skin
+    skinLight: '#789de6',
+    skinGlint: '#b5cefc',
+    cuffMain: '#241242',     // Dark arcade purple
+    cuffShadow: '#120822',
+    cuffTrim: '#00f5d4',     // Neon cyan cuff trim
+    cuffTrimShadow: '#00a892'
+  }
+};
+
+/**
+ * Pixel matrices (40 columns x 48 rows)
+ * Legend:
+ * . : Empty / Transparent
+ * # : Outline (#outline)
+ * X : Dark shadow (#shadowDark)
+ * = : Mid shadow (#shadowMid)
+ * o : Base skin (#skinBase)
+ * + : Skin highlight (#skinLight)
+ * * : Skin specular glint (#skinGlint)
+ * C : Sleeve cuff main (#cuffMain)
+ * S : Sleeve cuff shadow (#cuffShadow)
+ * T : Sleeve cuff trim (#cuffTrim)
+ * t : Sleeve cuff trim shadow (#cuffTrimShadow)
+ */
+
+// 1. CLENCHED FIST (ROCK / READY POSE)
+// Strong 16-bit clenched fist with curled fingers, prominent thumb across knuckles, wrist & sleeve
+const FIST_PIXELS = [
+  "........................................",
+  "........................................",
+  "........................................",
+  "........................................",
+  "...............########.................",
+  ".............##++++++++##...............",
+  "............#+**********+#..............",
+  "...........#+***oooooo***+#.............",
+  "..........#+**oo======oo**+#............",
+  ".........#+*oo==========oo*+#...........",
+  "........#+*o====XXXXXX====o*+#..........",
+  ".......#+*o===XXXXXXXXXX===o*+#.........",
+  ".......#+o===XX########XX===o+#.........",
+  "......#+o===XX#++++++++#XX===o+#........",
+  "......#+o==XX#+********+#XX==o+#........",
+  ".....#+o==XX#+**oooooo**+#XX==o+#.......",
+  ".....#+o==XX#+*oo====oo*+#XX==o+#.......",
+  ".....#+o=XX#+*o========o*+#XX=o+#.......",
+  ".....#+o=XX#+*o========o*+#XX=o+#.......",
+  ".....#+o=XX#+*o==XXXX==o*+#XX=o+#.......",
+  ".....#+o=XX#+*o==XXXX==o*+#XX=o+#.......",
+  "......#+o=XX#+*o======o*+#XX=o+#........",
+  "......#+o==XX#+*oooooo*+#XX==o+#........",
+  ".......#+o==XX#++++++++#XX==o+#.........",
+  "........#+o==XX########XX==o+#..........",
+  ".........#+o===XXXXXXXX===o+#...........",
+  "..........#+o============o+#............",
+  "...........#+*oo======oo*+#.............",
+  "............#+**********+#..............",
+  ".............##++++++++##...............",
+  "...............########.................",
+  ".............##TTTTTTTT##...............",
+  "............#TTttttttttTT#..............",
+  "...........#TTttttttttttTT#.............",
+  "..........#TTTTTTTTTTTTTTTT#............",
+  ".........#CCCCCCCCCCCCCCCCCC#...........",
+  "........#CCCCCCCCCCCCCCCCCCCC#..........",
+  ".......#CCCCCCCCCCCCCCCCCCCCCC#.........",
+  "......#CCCCCCCCCCCCCCCCCCCCCCCC#........",
+  ".....#CCCCCCCCCCCCCCCCCCCCCCCCCC#.......",
+  "....#CCCCCCCCCCCCCCCCCCCCCCCCCCCC#......",
+  "...#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC#.....",
+  "..#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#....",
+  ".#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#...",
+  "########################################",
+  "........................................",
+  "........................................",
+  "........................................"
+];
+
+/**
+ * High-definition SVG generator for pixel hands
+ * Using scalable vector rects with exact pixel color mapping
+ */
+function matrixToSvg(matrix, palette, width = 280, height = 336) {
+  const rows = matrix.length;
+  const cols = matrix[0].length;
+
+  let rects = '';
+  for (let r = 0; r < rows; r++) {
+    const rowStr = matrix[r];
+    for (let c = 0; c < cols; c++) {
+      const char = rowStr[c];
+      let fill = null;
+      switch (char) {
+        case '#': fill = palette.outline; break;
+        case 'X': fill = palette.shadowDark; break;
+        case '=': fill = palette.shadowMid; break;
+        case 'o': fill = palette.skinBase; break;
+        case '+': fill = palette.skinLight; break;
+        case '*': fill = palette.skinGlint; break;
+        case 'C': fill = palette.cuffMain; break;
+        case 'S': fill = palette.cuffShadow; break;
+        case 'T': fill = palette.cuffTrim; break;
+        case 't': fill = palette.cuffTrimShadow; break;
+        default: fill = null;
+      }
+      if (fill) {
+        rects += `<rect x="${c}" y="${r}" width="1" height="1" fill="${fill}" />`;
+      }
+    }
+  }
+
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         viewBox="0 0 ${cols} ${rows}" 
+         width="${width}" 
+         height="${height}" 
+         style="image-rendering: pixelated; shape-rendering: crispEdges;">
+      ${rects}
+    </svg>
+  `;
+}
+
+// Let's create dedicated, anatomically accurate, retro-arcade SVG pixel illustrations
+// for ROCK, PAPER, and SCISSORS to ensure they look unmistakably human and punchy!
+
+function createHandSvg(type, role = 'player') {
+  const pal = PALETTES[role] || PALETTES.player;
+  const isComputer = role === 'computer';
+
+  if (type === 'rock') {
+    return generateRockSvg(pal, isComputer);
+  } else if (type === 'paper') {
+    return generatePaperSvg(pal, isComputer);
+  } else if (type === 'scissors') {
+    return generateScissorsSvg(pal, isComputer);
+  }
+  return generateRockSvg(pal, isComputer);
+}
+
+// Expose globally for zero-CORS file:// local execution & ES export
+window.createHandSvg = createHandSvg;
+
+
+function generateRockSvg(p, isOpponent) {
+  // Clenched fist with thumb locked over fingers, knuckle definition, wrist cuff
+  return `
+  <svg class="pixel-hand-svg" viewBox="0 0 36 44" shape-rendering="crispEdges">
+    <g class="hand-root">
+      <!-- Forearm & Sleeve -->
+      <rect x="8" y="34" width="20" height="10" fill="${p.cuffMain}" />
+      <rect x="7" y="34" width="1" height="10" fill="${p.outline}" />
+      <rect x="28" y="34" width="1" height="10" fill="${p.outline}" />
+      <rect x="8" y="42" width="20" height="2" fill="${p.cuffShadow}" />
+      <!-- Sleeve Trim -->
+      <rect x="7" y="32" width="22" height="2" fill="${p.cuffTrim}" />
+      <rect x="7" y="32" width="22" height="1" fill="${p.cuffTrimShadow}" />
+      <rect x="6" y="32" width="1" height="2" fill="${p.outline}" />
+      <rect x="29" y="32" width="1" height="2" fill="${p.outline}" />
+
+      <!-- Wrist -->
+      <rect x="10" y="29" width="16" height="3" fill="${p.skinBase}" />
+      <rect x="9" y="29" width="1" height="3" fill="${p.outline}" />
+      <rect x="26" y="29" width="1" height="3" fill="${p.outline}" />
+      <rect x="10" y="30" width="3" height="2" fill="${p.shadowDark}" />
+
+      <!-- Fist Base Mass -->
+      <rect x="7" y="11" width="22" height="18" fill="${p.skinBase}" />
+      <!-- Dark Outlines -->
+      <rect x="9" y="8" width="18" height="1" fill="${p.outline}" />
+      <rect x="6" y="11" width="1" height="16" fill="${p.outline}" />
+      <rect x="29" y="11" width="1" height="17" fill="${p.outline}" />
+      <rect x="7" y="9" width="2" height="2" fill="${p.outline}" />
+      <rect x="27" y="9" width="2" height="2" fill="${p.outline}" />
+      <rect x="7" y="27" width="2" height="2" fill="${p.outline}" />
+      <rect x="27" y="28" width="2" height="2" fill="${p.outline}" />
+
+      <!-- Four Curled Fingers / Knuckles -->
+      <!-- Index Knuckle -->
+      <rect x="9" y="9" width="4" height="6" fill="${p.skinLight}" />
+      <rect x="10" y="10" width="2" height="2" fill="${p.skinGlint}" />
+      <rect x="13" y="9" width="1" height="6" fill="${p.shadowDark}" />
+
+      <!-- Middle Knuckle (highest) -->
+      <rect x="14" y="8" width="4" height="7" fill="${p.skinLight}" />
+      <rect x="15" y="9" width="2" height="2" fill="${p.skinGlint}" />
+      <rect x="18" y="8" width="1" height="7" fill="${p.shadowDark}" />
+
+      <!-- Ring Knuckle -->
+      <rect x="19" y="9" width="4" height="6" fill="${p.skinLight}" />
+      <rect x="20" y="10" width="2" height="2" fill="${p.skinGlint}" />
+      <rect x="23" y="9" width="1" height="6" fill="${p.shadowDark}" />
+
+      <!-- Pinky Knuckle -->
+      <rect x="24" y="11" width="4" height="5" fill="${p.skinBase}" />
+      <rect x="25" y="12" width="2" height="2" fill="${p.skinLight}" />
+      <rect x="28" y="11" width="1" height="6" fill="${p.shadowDark}" />
+
+      <!-- Finger Creases and Shadows -->
+      <rect x="9" y="15" width="19" height="2" fill="${p.shadowDark}" />
+      <rect x="9" y="17" width="19" height="1" fill="${p.shadowMid}" />
+
+      <!-- Thumb folded tightly across index & middle fingers -->
+      <rect x="6" y="17" width="16" height="8" fill="${p.skinBase}" />
+      <rect x="5" y="18" width="1" height="6" fill="${p.outline}" />
+      <rect x="7" y="16" width="14" height="1" fill="${p.outline}" />
+      <rect x="21" y="18" width="1" height="6" fill="${p.outline}" />
+      <rect x="7" y="24" width="14" height="1" fill="${p.outline}" />
+      <!-- Thumb Knuckle Highlight & Crease -->
+      <rect x="8" y="18" width="10" height="2" fill="${p.skinLight}" />
+      <rect x="10" y="18" width="4" height="1" fill="${p.skinGlint}" />
+      <rect x="15" y="19" width="1" height="4" fill="${p.shadowDark}" />
+      <rect x="18" y="19" width="3" height="3" fill="${p.skinLight}" />
+      <rect x="19" y="20" width="1" height="1" fill="${p.skinGlint}" />
+      <!-- Thumb Fold Shadow Below -->
+      <rect x="8" y="25" width="15" height="3" fill="${p.shadowDark}" />
+      <rect x="10" y="26" width="10" height="1" fill="${p.shadowMid}" />
+    </g>
+  </svg>`;
+}
+
+function generatePaperSvg(p, isOpponent) {
+  // Open hand with 5 extended fingers, spread palm, creases, wrist cuff
+  return `
+  <svg class="pixel-hand-svg" viewBox="0 0 36 44" shape-rendering="crispEdges">
+    <g class="hand-root">
+      <!-- Forearm & Sleeve -->
+      <rect x="8" y="34" width="20" height="10" fill="${p.cuffMain}" />
+      <rect x="7" y="34" width="1" height="10" fill="${p.outline}" />
+      <rect x="28" y="34" width="1" height="10" fill="${p.outline}" />
+      <rect x="8" y="42" width="20" height="2" fill="${p.cuffShadow}" />
+      <!-- Sleeve Trim -->
+      <rect x="7" y="32" width="22" height="2" fill="${p.cuffTrim}" />
+      <rect x="7" y="32" width="22" height="1" fill="${p.cuffTrimShadow}" />
+      <rect x="6" y="32" width="1" height="2" fill="${p.outline}" />
+      <rect x="29" y="32" width="1" height="2" fill="${p.outline}" />
+
+      <!-- Wrist -->
+      <rect x="10" y="28" width="16" height="4" fill="${p.skinBase}" />
+      <rect x="9" y="28" width="1" height="4" fill="${p.outline}" />
+      <rect x="26" y="28" width="1" height="4" fill="${p.outline}" />
+      <rect x="10" y="29" width="3" height="3" fill="${p.shadowDark}" />
+
+      <!-- Palm Base -->
+      <rect x="8" y="18" width="20" height="10" fill="${p.skinBase}" />
+      <rect x="7" y="18" width="1" height="10" fill="${p.outline}" />
+      <rect x="28" y="18" width="1" height="10" fill="${p.outline}" />
+      <!-- Palm Contour & Crease lines -->
+      <rect x="12" y="22" width="8" height="1" fill="${p.shadowDark}" />
+      <rect x="14" y="25" width="9" height="1" fill="${p.shadowDark}" />
+      <rect x="10" y="19" width="16" height="2" fill="${p.skinLight}" />
+
+      <!-- Thumb (spread to the left) -->
+      <rect x="2" y="18" width="6" height="7" fill="${p.skinBase}" />
+      <rect x="2" y="16" width="4" height="2" fill="${p.skinLight}" />
+      <rect x="3" y="15" width="2" height="1" fill="${p.outline}" />
+      <rect x="1" y="17" width="1" height="8" fill="${p.outline}" />
+      <rect x="2" y="25" width="6" height="1" fill="${p.outline}" />
+      <rect x="3" y="17" width="2" height="2" fill="${p.skinGlint}" />
+      <rect x="6" y="18" width="1" height="6" fill="${p.shadowDark}" />
+
+      <!-- Index Finger -->
+      <rect x="9" y="4" width="4" height="14" fill="${p.skinBase}" />
+      <rect x="8" y="4" width="1" height="14" fill="${p.outline}" />
+      <rect x="13" y="4" width="1" height="14" fill="${p.outline}" />
+      <rect x="9" y="3" width="4" height="1" fill="${p.outline}" />
+      <!-- Highlights & Segments -->
+      <rect x="10" y="4" width="2" height="12" fill="${p.skinLight}" />
+      <rect x="10" y="5" width="1" height="3" fill="${p.skinGlint}" />
+      <rect x="9" y="9" width="4" height="1" fill="${p.shadowDark}" />
+      <rect x="9" y="14" width="4" height="1" fill="${p.shadowDark}" />
+
+      <!-- Middle Finger (longest) -->
+      <rect x="14" y="1" width="4" height="17" fill="${p.skinBase}" />
+      <rect x="14" y="0" width="4" height="1" fill="${p.outline}" />
+      <rect x="18" y="1" width="1" height="17" fill="${p.outline}" />
+      <!-- Highlights & Segments -->
+      <rect x="15" y="1" width="2" height="15" fill="${p.skinLight}" />
+      <rect x="15" y="2" width="1" height="4" fill="${p.skinGlint}" />
+      <rect x="14" y="7" width="4" height="1" fill="${p.shadowDark}" />
+      <rect x="14" y="12" width="4" height="1" fill="${p.shadowDark}" />
+
+      <!-- Ring Finger -->
+      <rect x="19" y="4" width="4" height="14" fill="${p.skinBase}" />
+      <rect x="19" y="3" width="4" height="1" fill="${p.outline}" />
+      <rect x="23" y="4" width="1" height="14" fill="${p.outline}" />
+      <!-- Highlights & Segments -->
+      <rect x="20" y="4" width="2" height="12" fill="${p.skinLight}" />
+      <rect x="20" y="5" width="1" height="3" fill="${p.skinGlint}" />
+      <rect x="19" y="9" width="4" height="1" fill="${p.shadowDark}" />
+      <rect x="19" y="14" width="4" height="1" fill="${p.shadowDark}" />
+
+      <!-- Pinky Finger -->
+      <rect x="24" y="8" width="4" height="10" fill="${p.skinBase}" />
+      <rect x="24" y="7" width="4" height="1" fill="${p.outline}" />
+      <rect x="28" y="8" width="1" height="10" fill="${p.outline}" />
+      <!-- Highlights & Segments -->
+      <rect x="25" y="8" width="2" height="8" fill="${p.skinLight}" />
+      <rect x="25" y="9" width="1" height="2" fill="${p.skinGlint}" />
+      <rect x="24" y="12" width="4" height="1" fill="${p.shadowDark}" />
+    </g>
+  </svg>`;
+}
+
+function generateScissorsSvg(p, isOpponent) {
+  // Scissors (Peace V sign): Index and Middle extended in V shape,
+  // ring & pinky curled down, thumb locked across ring finger
+  return `
+  <svg class="pixel-hand-svg" viewBox="0 0 36 44" shape-rendering="crispEdges">
+    <g class="hand-root">
+      <!-- Forearm & Sleeve -->
+      <rect x="8" y="34" width="20" height="10" fill="${p.cuffMain}" />
+      <rect x="7" y="34" width="1" height="10" fill="${p.outline}" />
+      <rect x="28" y="34" width="1" height="10" fill="${p.outline}" />
+      <rect x="8" y="42" width="20" height="2" fill="${p.cuffShadow}" />
+      <!-- Sleeve Trim -->
+      <rect x="7" y="32" width="22" height="2" fill="${p.cuffTrim}" />
+      <rect x="7" y="32" width="22" height="1" fill="${p.cuffTrimShadow}" />
+      <rect x="6" y="32" width="1" height="2" fill="${p.outline}" />
+      <rect x="29" y="32" width="1" height="2" fill="${p.outline}" />
+
+      <!-- Wrist -->
+      <rect x="10" y="28" width="16" height="4" fill="${p.skinBase}" />
+      <rect x="9" y="28" width="1" height="4" fill="${p.outline}" />
+      <rect x="26" y="28" width="1" height="4" fill="${p.outline}" />
+      <rect x="10" y="29" width="3" height="3" fill="${p.shadowDark}" />
+
+      <!-- Palm / Curled Ring & Pinky mass -->
+      <rect x="8" y="18" width="20" height="10" fill="${p.skinBase}" />
+      <rect x="7" y="18" width="1" height="10" fill="${p.outline}" />
+      <rect x="28" y="18" width="1" height="10" fill="${p.outline}" />
+te
+      <!-- Curled Ring & Pinky Knuckles on right side -->
+      <rect x="19" y="16" width="9" height="8" fill="${p.skinBase}" />
+      <rect x="19" y="15" width="9" height="1" fill="${p.outline}" />
+      <rect x="23" y="16" width="1" height="8" fill="${p.shadowDark}" />
+      <rect x="20" y="17" width="2" height="4" fill="${p.skinLight}" />
+      <rect x="24" y="17" width="2" height="4" fill="${p.skinLight}" />
+      <rect x="19" y="21" width="9" height="1" fill="${p.shadowDark}" />
+
+      <!-- Thumb holding down folded fingers -->
+      <rect x="12" y="19" width="10" height="6" fill="${p.skinBase}" />
+      <rect x="11" y="19" width="1" height="6" fill="${p.outline}" />
+      <rect x="12" y="18" width="9" height="1" fill="${p.outline}" />
+      <rect x="22" y="19" width="1" height="6" fill="${p.outline}" />
+      <rect x="12" y="25" width="10" height="1" fill="${p.outline}" />
+      <rect x="13" y="19" width="7" height="2" fill="${p.skinLight}" />
+      <rect x="14" y="20" width="3" height="1" fill="${p.skinGlint}" />
+
+      <!-- EXTENDED SCISSORS BLADES (Index & Middle spreading into V) -->
+      <!-- Left Blade (Index finger angled slightly left) -->
+      <g transform="rotate(-9 12 17)">
+        <rect x="10" y="2" width="4" height="16" fill="${p.skinBase}" />
+        <rect x="9" y="2" width="1" height="16" fill="${p.outline}" />
+        <rect x="14" y="2" width="1" height="16" fill="${p.outline}" />
+        <rect x="10" y="1" width="4" height="1" fill="${p.outline}" />
+        <!-- Blade Shading / Highlights -->
+        <rect x="11" y="2" width="2" height="14" fill="${p.skinLight}" />
+        <rect x="11" y="3" width="1" height="5" fill="${p.skinGlint}" />
+        <rect x="10" y="7" width="4" height="1" fill="${p.shadowDark}" />
+        <rect x="10" y="12" width="4" height="1" fill="${p.shadowDark}" />
+      </g>
+
+      <!-- Right Blade (Middle finger angled slightly right) -->
+      <g transform="rotate(11 17 17)">
+        <rect x="16" y="1" width="4" height="17" fill="${p.skinBase}" />
+        <rect x="15" y="1" width="1" height="17" fill="${p.outline}" />
+        <rect x="20" y="1" width="1" height="17" fill="${p.outline}" />
+        <rect x="16" y="0" width="4" height="1" fill="${p.outline}" />
+        <!-- Blade Shading / Highlights -->
+        <rect x="17" y="1" width="2" height="15" fill="${p.skinLight}" />
+        <rect x="17" y="2" width="1" height="5" fill="${p.skinGlint}" />
+        <rect x="16" y="7" width="4" height="1" fill="${p.shadowDark}" />
+        <rect x="16" y="12" width="4" height="1" fill="${p.shadowDark}" />
+      </g>
+    </g>
+  </svg>`;
+}
+
+/**
+ * RETRO 8-BIT SOUND SYNTHESIZER (Web Audio API)
+ * Zero external audio files required — 100% reliable, zero CORS issues,
+ * fail-safe lazy loading that never blocks game execution.
+ */
+
+class SoundController {
+  constructor() {
+    this.ctx = null;
+    this.muted = false;
+  }
+
+  initContext() {
+    try {
+      if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (e) {
+      this.ctx = null;
+    }
+  }
+
+  toggleMute() {
+    this.muted = !this.muted;
+    return this.muted;
+  }
+
+  playHover() {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const now = this.ctx.currentTime;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.04);
+
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch (e) {}
+  }
+
+  playSelect() {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const now = this.ctx.currentTime;
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.05);
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } catch (e) {}
+  }
+
+  playShake(count = 1) {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const now = this.ctx.currentTime;
+      const baseFreq = 160 + (count * 60);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(baseFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.8, now + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.9, now + 0.2);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.22);
+    } catch (e) {}
+  }
+
+  playThrow() {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(700, now + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch (e) {}
+  }
+
+  playClash() {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.15);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+
+      this.playNoiseHit(now, 0.12);
+    } catch (e) {}
+  }
+
+  playNoiseHit(startTime, duration) {
+    try {
+      if (!this.ctx) return;
+      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1200, startTime);
+      filter.frequency.exponentialRampToValueAtTime(200, startTime + duration);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.18, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      noise.start(startTime);
+      noise.stop(startTime + duration);
+    } catch (e) {}
+  }
+
+  playVictory() {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const notes = [
+        { f: 523.25, d: 0.10 },
+        { f: 659.25, d: 0.10 },
+        { f: 783.99, d: 0.10 },
+        { f: 1046.50, d: 0.35 }
+      ];
+
+      let time = this.ctx.currentTime + 0.05;
+      notes.forEach((note) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(note.f, time);
+
+        gain.gain.setValueAtTime(0.16, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + note.d);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(time);
+        osc.stop(time + note.d);
+
+        time += note.d * 0.9;
+      });
+    } catch (e) {}
+  }
+
+  playDraw() {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const notes = [
+        { f: 440, d: 0.15 },
+        { f: 440, d: 0.25 }
+      ];
+
+      let time = this.ctx.currentTime + 0.05;
+      notes.forEach((note) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(note.f, time);
+
+        gain.gain.setValueAtTime(0.14, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + note.d);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(time);
+        osc.stop(time + note.d);
+
+        time += note.d * 0.8;
+      });
+    } catch (e) {}
+  }
+
+  playTryAgain() {
+    try {
+      if (this.muted) return;
+      this.initContext();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime + 0.05;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(330, now);
+      osc.frequency.exponentialRampToValueAtTime(220, now + 0.22);
+
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch (e) {}
+  }
+}
+
+window.sounds = new SoundController();
+
+/**
+ * ROCK PAPER SCISSORS - CORE GAME LOGIC & ANIMATION CONTROLLER
+ * Full 3D Perspective Hand Movement, SVG Pixel Art & Score Engine
+ */
+
+// Game State
+const state = {
+  playerWins: 0,
+  draws: 0,
+  streak: 0,
+  bestStreak: 0,
+  totalRounds: 0,
+  isPlaying: false,
+  muted: false
+};
+
+const MOVES = ['rock', 'paper', 'scissors'];
+
+// Dynamic DOM Elements Accessor (ensures elements are never null)
+function getElements() {
+  return {
+    playerHandVisual: document.getElementById('player-hand-visual'),
+    computerHandVisual: document.getElementById('computer-hand-visual'),
+    playerHandRig: document.getElementById('player-hand-rig'),
+    computerHandRig: document.getElementById('computer-hand-rig'),
+    battleArena: document.getElementById('battle-arena'),
+    impactBurst: document.getElementById('impact-burst'),
+    shockwave: document.getElementById('shockwave'),
+
+    countdownCallout: document.getElementById('countdown-callout'),
+    resultBanner: document.getElementById('result-banner'),
+    resultMain: document.getElementById('result-main'),
+    resultSub: document.getElementById('result-sub'),
+    roundLogStrip: document.getElementById('round-log-strip'),
+
+    valPlayerWins: document.getElementById('val-player-wins'),
+    valDraws: document.getElementById('val-draws'),
+    valStreak: document.getElementById('val-streak'),
+
+    btnRock: document.getElementById('btn-rock'),
+    btnPaper: document.getElementById('btn-paper'),
+    btnScissors: document.getElementById('btn-scissors'),
+    moveButtons: document.querySelectorAll('.move-btn'),
+    btnMute: document.getElementById('btn-mute'),
+    btnReset: document.getElementById('btn-reset'),
+    btnHelp: document.getElementById('btn-help'),
+
+    helpModal: document.getElementById('help-modal'),
+    btnModalClose: document.getElementById('modal-close')
+  };
+}
+
+// Initialize Game
+function initGame() {
+  console.log("🎮 Initializing Super Ro-Sham-Bo...");
+  loadStoredStats();
+  renderDefaultHands();
+  bindEvents();
+  updateScoreboardUI();
+  console.log("✅ Super Ro-Sham-Bo Ready! Press 1, 2, 3 or click an emoji to play.");
+}
+window.initGame = initGame;
+
+function loadStoredStats() {
+  try {
+    const saved = localStorage.getItem('rps_retro_stats');
+    if (saved) {
+      const data = JSON.parse(saved);
+      state.playerWins = data.playerWins || 0;
+      state.draws = data.draws || 0;
+      state.streak = data.streak || 0;
+      state.bestStreak = data.bestStreak || 0;
+      state.totalRounds = data.totalRounds || 0;
+    }
+  } catch (e) {
+    console.warn('Could not read from localStorage', e);
+  }
+}
+
+function saveStats() {
+  try {
+    localStorage.setItem('rps_retro_stats', JSON.stringify({
+      playerWins: state.playerWins,
+      draws: state.draws,
+      streak: state.streak,
+      bestStreak: state.bestStreak,
+      totalRounds: state.totalRounds
+    }));
+  } catch (e) {
+    console.warn('Could not write to localStorage', e);
+  }
+}
+
+function renderDefaultHands() {
+  const el = getElements();
+  if (window.createHandSvg) {
+    if (el.playerHandVisual) el.playerHandVisual.innerHTML = window.createHandSvg('rock', 'player');
+    if (el.computerHandVisual) el.computerHandVisual.innerHTML = window.createHandSvg('rock', 'computer');
+  }
+
+  if (el.playerHandRig) el.playerHandRig.className = 'hand-rig hand-player idle';
+  if (el.computerHandRig) el.computerHandRig.className = 'hand-rig hand-computer idle';
+}
+
+function bindEvents() {
+  const el = getElements();
+
+  if (el.btnRock) el.btnRock.onclick = () => handleMoveSelect('rock');
+  if (el.btnPaper) el.btnPaper.onclick = () => handleMoveSelect('paper');
+  if (el.btnScissors) el.btnScissors.onclick = () => handleMoveSelect('scissors');
+
+  // Hover SFX
+  el.moveButtons.forEach(btn => {
+    btn.onmouseenter = () => {
+      if (window.sounds) window.sounds.playHover();
+    };
+  });
+
+  // Header Actions
+  if (el.btnMute) {
+    el.btnMute.onclick = () => {
+      if (window.sounds) {
+        const isMuted = window.sounds.toggleMute();
+        state.muted = isMuted;
+        el.btnMute.innerHTML = isMuted ? '🔇 SOUND OFF' : '🔊 SOUND ON';
+      }
+    };
+  }
+
+  if (el.btnReset) {
+    el.btnReset.onclick = () => {
+      if (confirm('Reset your score and streak?')) {
+        state.playerWins = 0;
+        state.draws = 0;
+        state.streak = 0;
+        saveStats();
+        updateScoreboardUI();
+        if (window.sounds) window.sounds.playTryAgain();
+      }
+    };
+  }
+
+  if (el.btnHelp && el.helpModal) {
+    el.btnHelp.onclick = () => {
+      el.helpModal.classList.add('active');
+      if (window.sounds) window.sounds.playSelect();
+    };
+  }
+
+  if (el.btnModalClose && el.helpModal) {
+    el.btnModalClose.onclick = () => {
+      el.helpModal.classList.remove('active');
+      if (window.sounds) window.sounds.playHover();
+    };
+  }
+
+  if (el.helpModal) {
+    el.helpModal.onclick = (e) => {
+      if (e.target === el.helpModal) {
+        el.helpModal.classList.remove('active');
+      }
+    };
+  }
+
+  // Keyboard Shortcuts: 1/R (Rock), 2/P (Paper), 3/S (Scissors), M (Mute)
+  window.onkeydown = (e) => {
+    if (state.isPlaying) return;
+    const key = e.key.toLowerCase();
+    const code = e.code;
+
+    if (key === '1' || key === 'r' || code === 'Digit1' || code === 'Numpad1' || code === 'KeyR') {
+      e.preventDefault();
+      handleMoveSelect('rock');
+    } else if (key === '2' || key === 'p' || code === 'Digit2' || code === 'Numpad2' || code === 'KeyP') {
+      e.preventDefault();
+      handleMoveSelect('paper');
+    } else if (key === '3' || key === 's' || code === 'Digit3' || code === 'Numpad3' || code === 'KeyS') {
+      e.preventDefault();
+      handleMoveSelect('scissors');
+    } else if (key === 'm' || code === 'KeyM') {
+      if (el.btnMute) el.btnMute.click();
+    }
+  };
+}
+
+function updateScoreboardUI(bumpedKey = null) {
+  const el = getElements();
+  if (el.valPlayerWins) el.valPlayerWins.textContent = state.playerWins;
+  if (el.valDraws) el.valDraws.textContent = state.draws;
+  if (el.valStreak) el.valStreak.textContent = state.streak;
+
+  if (bumpedKey) {
+    const target = bumpedKey === 'win' ? el.valPlayerWins : el.valDraws;
+    if (target) {
+      target.classList.add('bump');
+      setTimeout(() => target.classList.remove('bump'), 300);
+    }
+  }
+}
+
+/**
+ * MAIN MOVE SELECTION & ANIMATION CHOREOGRAPHY
+ */
+async function handleMoveSelect(playerMove) {
+  if (state.isPlaying) return;
+  state.isPlaying = true;
+
+  console.log(`🎯 Player threw: ${playerMove.toUpperCase()}`);
+
+  // Safety watchdog: Auto-reset state.isPlaying after 3.5 seconds
+  const safetyTimeout = setTimeout(() => {
+    state.isPlaying = false;
+    const el = getElements();
+    el.moveButtons.forEach(btn => btn.disabled = false);
+  }, 3500);
+
+  const el = getElements();
+  if (window.sounds) window.sounds.playSelect();
+
+  // Highlight selected button
+  el.moveButtons.forEach(btn => {
+    btn.disabled = true;
+    btn.classList.toggle('selected', btn.dataset.move === playerMove);
+  });
+
+  // Hide any previous result banner
+  if (el.resultBanner) {
+    el.resultBanner.className = 'result-banner';
+    el.resultBanner.classList.remove('show');
+  }
+
+  // Ensure both hands start as fists for the 1-2-3 shake
+  if (window.createHandSvg) {
+    if (el.playerHandVisual) el.playerHandVisual.innerHTML = window.createHandSvg('rock', 'player');
+    if (el.computerHandVisual) el.computerHandVisual.innerHTML = window.createHandSvg('rock', 'computer');
+  }
+
+  // Remove idle sway
+  if (el.playerHandRig) el.playerHandRig.className = 'hand-rig hand-player';
+  if (el.computerHandRig) el.computerHandRig.className = 'hand-rig hand-computer';
+
+  // Computer picks move
+  const computerMove = MOVES[Math.floor(Math.random() * MOVES.length)];
+
+  // --- BEAT 1: "ROCK!" ---
+  showAnnouncer('ROCK!', 'pop-1');
+  triggerHandShake('shake-1', 1);
+  await delay(480);
+
+  // --- BEAT 2: "PAPER!" ---
+  showAnnouncer('PAPER!', 'pop-2');
+  triggerHandShake('shake-2', 2);
+  await delay(480);
+
+  // --- BEAT 3: "SCISSORS!" ---
+  showAnnouncer('SCISSORS!', 'pop-3');
+  triggerHandShake('shake-3', 3);
+  await delay(480);
+
+  // --- BEAT 4: "SHOOT!" & THROW ---
+  showAnnouncer('SHOOT!', 'pop-shoot');
+  if (window.sounds) window.sounds.playThrow();
+
+  // Trigger forward throw
+  if (el.playerHandRig) el.playerHandRig.className = 'hand-rig hand-player shoot';
+  if (el.computerHandRig) el.computerHandRig.className = 'hand-rig hand-computer shoot';
+
+  // Mid-throw (250ms): reveal the chosen move shapes
+  await delay(250);
+  if (window.createHandSvg) {
+    if (el.playerHandVisual) el.playerHandVisual.innerHTML = window.createHandSvg(playerMove, 'player');
+    if (el.computerHandVisual) el.computerHandVisual.innerHTML = window.createHandSvg(computerMove, 'computer');
+  }
+
+  // Let hands hold at peak, then evaluate
+  await delay(350);
+  evaluateRound(playerMove, computerMove);
+
+  // Brief moment to read the result, then auto-hide banner and return to idle
+  await delay(900);
+  if (el.resultBanner) el.resultBanner.classList.remove('show');
+  resetToIdle();
+  clearTimeout(safetyTimeout);
+  state.isPlaying = false;
+  el.moveButtons.forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('selected');
+  });
+}
+window.handleMoveSelect = handleMoveSelect;
+
+function triggerHandShake(animationClass, count) {
+  const el = getElements();
+  if (el.playerHandRig) el.playerHandRig.className = `hand-rig hand-player ${animationClass}`;
+  if (el.computerHandRig) el.computerHandRig.className = `hand-rig hand-computer ${animationClass}`;
+  if (window.sounds) window.sounds.playShake(count);
+}
+
+function showAnnouncer(text, modifierClass) {
+  const el = getElements();
+  if (el.countdownCallout) {
+    el.countdownCallout.textContent = text;
+    el.countdownCallout.className = `countdown-callout show ${modifierClass}`;
+  }
+}
+
+function triggerClashEffects() {
+  // Clash effects removed — no explosion, no screen shake
+}
+
+/**
+ * Evaluate Round Results:
+ * STRICT RULE: Only mention player wins and draws. Never mention computer wins.
+ */
+function evaluateRound(playerMove, computerMove) {
+  state.totalRounds++;
+  let outcome = 'loss';
+
+  if (playerMove === computerMove) {
+    outcome = 'draw';
+  } else if (
+    (playerMove === 'rock' && computerMove === 'scissors') ||
+    (playerMove === 'paper' && computerMove === 'rock') ||
+    (playerMove === 'scissors' && computerMove === 'paper')
+  ) {
+    outcome = 'win';
+  } else {
+    outcome = 'loss';
+  }
+
+  const el = getElements();
+  if (el.countdownCallout) el.countdownCallout.className = 'countdown-callout';
+
+  if (outcome === 'win') {
+    state.playerWins++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+    if (window.sounds) window.sounds.playVictory();
+    if (el.playerHandRig) el.playerHandRig.classList.add('hand-winner');
+
+    if (el.resultMain) el.resultMain.textContent = 'YOU WON! 🏆';
+    if (el.resultSub) el.resultSub.textContent = `${capitalize(playerMove)} beats ${capitalize(computerMove)}! +1 Point`;
+    if (el.resultBanner) el.resultBanner.className = 'result-banner show win';
+
+    updateScoreboardUI('win');
+    addLogEntry('win', `Round ${state.totalRounds}: You Won (${getEmoji(playerMove)} vs ${getEmoji(computerMove)})`);
+
+  } else if (outcome === 'draw') {
+    state.draws++;
+    if (window.sounds) window.sounds.playDraw();
+
+    if (el.resultMain) el.resultMain.textContent = "IT'S A DRAW! 🤝";
+    if (el.resultSub) el.resultSub.textContent = `Both chose ${capitalize(playerMove)}! Mutual clash!`;
+    if (el.resultBanner) el.resultBanner.className = 'result-banner show draw';
+
+    updateScoreboardUI('draw');
+    addLogEntry('draw', `Round ${state.totalRounds}: Draw (${getEmoji(playerMove)} vs ${getEmoji(computerMove)})`);
+
+  } else {
+    // Loss / Computer Win round:
+    // IMPORTANT: Under NO circumstance mention computer wins!
+    state.streak = 0;
+    if (window.sounds) window.sounds.playTryAgain();
+
+    if (el.resultMain) el.resultMain.textContent = 'ROUND OVER! ⚡';
+    if (el.resultSub) el.resultSub.textContent = `${capitalize(computerMove)} blocks ${capitalize(playerMove)}. Strike again!`;
+    if (el.resultBanner) el.resultBanner.className = 'result-banner show try-again';
+
+    updateScoreboardUI();
+    addLogEntry('try-again', `Round ${state.totalRounds}: Round Done (${getEmoji(playerMove)} vs ${getEmoji(computerMove)})`);
+  }
+
+  saveStats();
+}
+
+function resetToIdle() {
+  const el = getElements();
+  if (el.playerHandRig) el.playerHandRig.className = 'hand-rig hand-player idle';
+  if (el.computerHandRig) el.computerHandRig.className = 'hand-rig hand-computer idle';
+}
+
+function addLogEntry(type, text) {
+  const el = getElements();
+  if (!el.roundLogStrip) return;
+
+  const tag = document.createElement('span');
+  tag.className = `log-tag ${type}`;
+  tag.textContent = text;
+  el.roundLogStrip.prepend(tag);
+
+  while (el.roundLogStrip.children.length > 8) {
+    el.roundLogStrip.removeChild(el.roundLogStrip.lastChild);
+  }
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function getEmoji(move) {
+  if (move === 'rock') return '✊';
+  if (move === 'paper') return '🖐️';
+  if (move === 'scissors') return '✌️';
+  return '✊';
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Auto init
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGame);
+} else {
+  initGame();
+}
+
+</script>
+</body>
+</html>
+

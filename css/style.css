@@ -32,11 +32,15 @@
 html, body {
   width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--bg-dark);
   font-family: 'Press Start 2P', 'Silkscreen', monospace, sans-serif;
   color: var(--text-main);
   image-rendering: pixelated;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Background Animated Grid */
@@ -54,10 +58,13 @@ html, body {
   display: flex;
   flex-direction: column;
   width: 100vw;
-  height: 100vh;
+  height: 100%;
+  height: 100dvh;
   background: var(--bg-gradient);
   position: relative;
   overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Header & HUD */
@@ -864,43 +871,188 @@ html, body {
   40%, 60% { transform: translate3d(5px, -2px, 0); }
 }
 
-/* Responsive Adjustments */
+/* Responsive & Android Mobile Adjustments */
 @media (max-width: 640px) {
   .arcade-header {
-    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    justify-content: space-between;
   }
+
   .title-badge h1 {
     font-size: 10px;
   }
-  .score-box {
-    padding: 4px 8px;
+
+  .hud-scores {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
   }
+
+  .score-box {
+    flex: 1;
+    padding: 4px 6px;
+  }
+
   .score-label {
     font-size: 7px;
   }
+
   .score-val {
-    font-size: 11px;
+    font-size: 12px;
   }
-  .hand-visual {
-    width: 190px;
-    height: 240px;
+
+  .header-actions {
+    gap: 6px;
   }
-  .move-btn {
-    padding: 10px 6px;
-  }
-  .move-btn .emoji-icon {
-    font-size: 24px;
-  }
-  .move-btn .btn-label {
+
+  .icon-btn {
+    padding: 6px 8px;
     font-size: 8px;
   }
-  .move-buttons-group {
-    gap: 10px;
+
+  .announcer-container {
+    top: 10%;
   }
+
   .countdown-callout {
     font-size: 18px;
   }
+
   .countdown-callout.pop-shoot {
     font-size: 24px;
+  }
+
+  .result-banner {
+    padding: 8px 14px;
+  }
+
+  .result-main {
+    font-size: 13px;
+  }
+
+  .result-sub {
+    font-size: 8px;
+  }
+
+  /* Mobile Hand Visual & Positioning */
+  .hand-visual {
+    width: 160px;
+    height: 200px;
+  }
+
+  .hand-player {
+    margin-left: -80px;
+    margin-top: -100px;
+    transform: translate3d(55px, 115px, 20px) rotateZ(-14deg) scale(1.15);
+  }
+
+  .hand-computer {
+    margin-left: -80px;
+    margin-top: -100px;
+    transform: translate3d(-55px, -115px, 0px) rotateZ(166deg) scale(1.0);
+  }
+
+  /* Mobile Controls Dock */
+  .player-controls-dock {
+    padding: 10px 10px env(safe-area-inset-bottom, 10px) 10px;
+    gap: 8px;
+  }
+
+  .controls-instruction {
+    font-size: 8px;
+  }
+
+  .move-buttons-group {
+    gap: 8px;
+    max-width: 100%;
+  }
+
+  .move-btn {
+    padding: 12px 6px;
+    min-height: 60px;
+    touch-action: manipulation;
+  }
+
+  .move-btn .emoji-icon {
+    font-size: 28px;
+  }
+
+  .move-btn .btn-label {
+    font-size: 8px;
+  }
+
+  .move-btn .btn-key {
+    display: none; /* Hide desktop keyboard hints on mobile devices */
+  }
+
+  .round-log-strip {
+    font-size: 7px;
+    max-width: 100%;
+  }
+
+  /* Mobile Hand Shake & Throw Animations (Scaled & Framed for Mobile Viewports) */
+  @keyframes player-breathe {
+    0% { transform: translate3d(55px, 115px, 20px) rotateZ(-14deg) scale(1.15); }
+    100% { transform: translate3d(50px, 110px, 18px) rotateZ(-13deg) scale(1.13); }
+  }
+
+  @keyframes computer-breathe {
+    0% { transform: translate3d(-55px, -115px, 0px) rotateZ(166deg) scale(1.0); }
+    100% { transform: translate3d(-50px, -110px, 0px) rotateZ(167deg) scale(1.02); }
+  }
+
+  @keyframes player-pump-1 {
+    0% { transform: translate3d(55px, 115px, 20px) rotateZ(-14deg) scale(1.15); }
+    35% { transform: translate3d(70px, 140px, 40px) rotateZ(-18deg) scale(1.2); }
+    80% { transform: translate3d(25px, 65px, 10px) rotateZ(-8deg) scale(1.08); }
+    100% { transform: translate3d(45px, 100px, 18px) rotateZ(-12deg) scale(1.12); }
+  }
+
+  @keyframes player-pump-2 {
+    0% { transform: translate3d(45px, 100px, 18px) rotateZ(-12deg) scale(1.12); }
+    35% { transform: translate3d(75px, 145px, 45px) rotateZ(-20deg) scale(1.22); }
+    80% { transform: translate3d(18px, 50px, 5px) rotateZ(-6deg) scale(1.06); }
+    100% { transform: translate3d(40px, 95px, 15px) rotateZ(-11deg) scale(1.1); }
+  }
+
+  @keyframes player-pump-3 {
+    0% { transform: translate3d(40px, 95px, 15px) rotateZ(-11deg) scale(1.1); }
+    45% { transform: translate3d(80px, 155px, 50px) rotateZ(-22deg) scale(1.25); }
+    100% { transform: translate3d(75px, 145px, 45px) rotateZ(-21deg) scale(1.22); }
+  }
+
+  @keyframes player-shoot-throw {
+    0% { transform: translate3d(75px, 145px, 45px) rotateZ(-21deg) scale(1.22); }
+    60% { transform: translate3d(25px, 55px, 10px) rotateZ(-7deg) scale(1.08); }
+    100% { transform: translate3d(30px, 60px, 5px) rotateZ(-7deg) scale(1.08); }
+  }
+
+  @keyframes comp-pump-1 {
+    0% { transform: translate3d(-55px, -115px, 0px) rotateZ(166deg) scale(1.0); }
+    35% { transform: translate3d(-70px, -140px, -20px) rotateZ(162deg) scale(0.94); }
+    80% { transform: translate3d(-25px, -65px, 5px) rotateZ(172deg) scale(1.02); }
+    100% { transform: translate3d(-45px, -100px, 0px) rotateZ(168deg) scale(0.98); }
+  }
+
+  @keyframes comp-pump-2 {
+    0% { transform: translate3d(-45px, -100px, 0px) rotateZ(168deg) scale(0.98); }
+    35% { transform: translate3d(-75px, -145px, -25px) rotateZ(160deg) scale(0.92); }
+    80% { transform: translate3d(-18px, -50px, 10px) rotateZ(174deg) scale(1.04); }
+    100% { transform: translate3d(-40px, -95px, 0px) rotateZ(169deg) scale(0.98); }
+  }
+
+  @keyframes comp-pump-3 {
+    0% { transform: translate3d(-40px, -95px, 0px) rotateZ(169deg) scale(0.98); }
+    45% { transform: translate3d(-80px, -155px, -30px) rotateZ(158deg) scale(0.88); }
+    100% { transform: translate3d(-75px, -145px, -25px) rotateZ(160deg) scale(0.9); }
+  }
+
+  @keyframes comp-shoot-throw {
+    0% { transform: translate3d(-75px, -145px, -25px) rotateZ(160deg) scale(0.9); }
+    60% { transform: translate3d(-25px, -55px, 5px) rotateZ(173deg) scale(1.02); }
+    100% { transform: translate3d(-30px, -60px, 0px) rotateZ(173deg) scale(1.02); }
   }
 }

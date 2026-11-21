@@ -26,9 +26,15 @@ A retro arcade web game replicating the physical motion of human hands playing R
    - Dynamic real-time sound synthesis: shake whooshes, throw sweeps, impact hits, victory fanfare, and tie chimes.
    - No external `.mp3` files needed — 100% immune to CORS errors, broken links, or missing asset paths when deployed!
 
-5. **Controls**:
-   - Large tactile emoji buttons: `✊ ROCK`, `🖐️ PAPER`, `✌️ SCISSORS`.
-   - Keyboard shortcuts: `[1]` or `[R]`, `[2]` or `[P]`, `[3]` or `[S]`, and `[M]` to mute.
+5. **Mobile & Android Optimized (PWA Ready)**:
+   - Dynamic viewport sizing (`100dvh`) prevents browser address bar cut-offs on Android Chrome.
+   - Touch-action optimizations (`touch-action: manipulation`) remove 300ms mobile tap delay and prevent accidental pull-to-refresh.
+   - PWA web manifest (`manifest.json`): Can be installed directly to an Android home screen as a standalone app!
+   - Responsive touch layout with thumb-friendly controls and scaled hand animations.
+
+6. **Controls**:
+   - Touch/Click large emoji buttons: `✊ ROCK`, `🖐️ PAPER`, `✌️ SCISSORS`.
+   - Keyboard shortcuts (on desktop): `[1]` or `[R]`, `[2]` or `[P]`, `[3]` or `[S]`, and `[M]` to mute.
 
 ---
 

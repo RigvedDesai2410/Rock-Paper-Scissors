@@ -280,4 +280,22 @@ class SoundController {
   }
 }
 
+// Global instance
 window.sounds = new SoundController();
+
+// Android & Mobile Touch Unlocker:
+// Browsers on Android require an explicit touch gesture to activate the Web Audio engine.
+if (typeof window !== 'undefined') {
+  const unlockMobileAudio = () => {
+    if (window.sounds) {
+      window.sounds.initContext();
+    }
+    window.removeEventListener('touchstart', unlockMobileAudio);
+    window.removeEventListener('touchend', unlockMobileAudio);
+    window.removeEventListener('pointerdown', unlockMobileAudio);
+  };
+  window.addEventListener('touchstart', unlockMobileAudio, { passive: true });
+  window.addEventListener('touchend', unlockMobileAudio, { passive: true });
+  window.addEventListener('pointerdown', unlockMobileAudio, { passive: true });
+}
+
